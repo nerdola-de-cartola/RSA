@@ -6,7 +6,7 @@
 
 typedef long long ll;
 
-#define MAX_PRIMES 10000000
+#define MAX_PRIMES 10000
 
 ll PRIMES[MAX_PRIMES];
 ll PRIMES_QTD;
@@ -16,6 +16,8 @@ ll randomPrime();
 void sieveOfEratosthenes();
 ll totienteDeEuler(ll p, ll q);
 ll inverso(ll a, ll n);
+ll modularExponential(ll b, ll e, ll m);
+ll encryptRSA(ll message, ll e, ll n);
 
 int main(void) {
 
@@ -24,8 +26,10 @@ int main(void) {
 
    ll p = randomPrime();
    ll q = randomPrime();
+   ll n = p * q;
    ll fi = totienteDeEuler(p, q);
    ll e, d;
+   ll M;
 
    do {
       e = rand() % fi;
@@ -36,18 +40,51 @@ int main(void) {
    printf(
       "p: %lld\n"\
       "q: %lld\n"\
+      "n: %lld\n"\
       "fi: %lld\n"\
       "e: %lld\n"\
       "d: %lld\n",
       p,
       q,
+      n,
       fi,
       e,
       d
    );
+
+   printf("Digite a mensagem desejada: ");
+   scanf("%lld", &M);
+
+   ll N = encryptRSA(M, e, n);
    
+   printf("Sua mensagem encriptada é: %lld\n", N);
 
    return 0;
+}
+
+ll modularExponential(ll b, ll e, ll m) {
+
+   ll answer = 1;
+
+   while (e > 0) {
+
+      if (e&1)
+         answer = (answer * b) % m;
+
+      e = e >> 1;
+
+      b = (b * b) % m;
+
+   }
+
+   return answer % m;
+
+}
+
+ll encryptRSA(ll message, ll e, ll n) {
+
+   return modularExponential(message, e, n);
+
 }
 
 ll inverso(ll a, ll n) {
@@ -78,6 +115,9 @@ ll inverso(ll a, ll n) {
 
       s = t_antigo;
    }
+
+   if(t < 0)
+      return mod + t;
 
    return t % mod;
 

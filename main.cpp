@@ -1,11 +1,13 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
 #include <bitset> 
 #include <stack> 
+#include <boost/multiprecision/cpp_int.hpp>
 
-#define MAX_PRIMES 10000
+#define MAX_PRIMES 100000
 
+typedef boost::multiprecision::int1024_t i_1024;
 typedef long long ll;
 
 ll PRIMES[MAX_PRIMES];
@@ -14,27 +16,27 @@ std::bitset<MAX_PRIMES> isPrime;
 
 ll randomPrime();
 void sieveOfEratosthenes();
-ll totienteDeEuler(ll p, ll q);
-ll inverso(ll a, ll n);
-ll modularExponential(ll b, ll e, ll m);
-ll TCR(ll *a, ll *m, int size);
+i_1024 totienteDeEuler(i_1024 p, i_1024 q);
+i_1024 inverso(i_1024 a, i_1024 n);
+i_1024 modularExponential(i_1024 b, i_1024 e, i_1024 m);
+i_1024 TCR(i_1024 *a, i_1024 *m, int size);
 
 struct PrivateKey {
-   ll p;
-   ll q;
-   ll d;
+   i_1024 p;
+   i_1024 q;
+   i_1024 d;
    
    void print(char *name) {
-      printf("Private key of %s: (%lld, %lld, %lld)\n", name, p, q, d);
+      std::cout << "Private key of " << name << ": (" << p << ", " << q << ", " << d << ")\n";
    }
 };
 
 struct PublicKey {
-   ll n;
-   ll e;
+   i_1024 n;
+   i_1024 e;
 
    void print(char *name) {
-      printf("Public key of %s: (%lld, %lld)\n", name, n, e);
+      std::cout << "Public key of " << name << ": (" << n << ", " << e << ")\n";
    }
 };
 
@@ -48,7 +50,7 @@ struct Keys {
       priv.q = randomPrime();
       pub.n = priv.p * priv.q;
       
-      ll fi = totienteDeEuler(priv.p, priv.q);
+      i_1024 fi = totienteDeEuler(priv.p, priv.q);
 
       do {
          pub.e = rand() % fi;
@@ -66,8 +68,8 @@ struct Keys {
    }
 };
 
-ll encryptRSA(ll message, PublicKey key);
-ll decryptRSA(ll N, PrivateKey key);
+i_1024 encryptRSA(i_1024 message, PublicKey key);
+i_1024 decryptRSA(i_1024 N, PrivateKey key);
 
 int main(void) {
 
@@ -76,34 +78,33 @@ int main(void) {
 
    Keys Ana;
    Keys Beto;
-   ll M;
+   i_1024 M;
 
    Ana.print( (char *) "Ana");
    printf("\n");
    Beto.print( (char *) "Beto");
 
-   printf("Digite a mensagem desejada: ");
-   scanf("%lld", &M);
+   std::cout << "Digite a mensagem desejada: ";
+   std::cin >> M;
 
    M = encryptRSA(M, Beto.pub);
-   printf("Ana manda para Beto a mensagem criptografada %lld\n", M);
+   std::cout << "Ana manda para Beto a mensagem criptografada " <<  M << '\n';
 
    M = encryptRSA(M, Ana.pub);
-   printf("Beto manda de volta para Ana a mensagem duplamente criptografada %lld\n", M);
+   std::cout << "Beto manda de volta para Ana a mensagem duplamente criptografada " << M << '\n';
 
    M = decryptRSA(M, Ana.priv);
-   printf("Ana descriptografa a mensagem e envia de volta para Beto %lld\n", M);
+   std::cout << "Ana descriptografa a mensagem e envia de volta para Beto " << M << '\n';
 
    M = decryptRSA(M, Beto.priv);
-   printf("Por fim, Beto descriptografa a mensagem %lld\n", M);
-
+   std::cout << "Por fim, Beto descriptografa a mensagem " << M << '\n';
 
    return 0;
 }
 
-ll modularExponential(ll b, ll e, ll m) {
+i_1024 modularExponential(i_1024 b, i_1024 e, i_1024 m) {
 
-   ll answer = 1;
+   i_1024 answer = 1;
 
    while (e > 0) {
 
@@ -120,18 +121,18 @@ ll modularExponential(ll b, ll e, ll m) {
 
 }
 
-ll encryptRSA(ll message, PublicKey key) {
+i_1024 encryptRSA(i_1024 message, PublicKey key) {
 
    return modularExponential(message, key.e, key.n);
 
 }
 
-ll inverso(ll a, ll n) {
+i_1024 inverso(i_1024 a, i_1024 n) {
 
-   ll r = 1;
-   std::stack<ll> q;
+   i_1024 r = 1;
+   std::stack<i_1024> q;
 
-   ll mod = n;
+   i_1024 mod = n;
 
    while(r != 0) {
       q.push(n / a);
@@ -144,7 +145,7 @@ ll inverso(ll a, ll n) {
    if(n != 1)
       return -1;
 
-   ll s = 0, t = 1, t_antigo;
+   i_1024 s = 0, t = 1, t_antigo;
    q.pop();
 
    while(q.size() != 0) {
@@ -162,7 +163,7 @@ ll inverso(ll a, ll n) {
 
 }
 
-ll totienteDeEuler(ll p, ll q) {
+i_1024 totienteDeEuler(i_1024 p, i_1024 q) {
    return (p - 1) * (q - 1);
 }
 
@@ -204,11 +205,11 @@ ll randomPrime() {
 
 }
 
-ll decryptRSA(ll N, PrivateKey key) {
+i_1024 decryptRSA(i_1024 N, PrivateKey key) {
 
-   ll a[2];
-   ll m[2];
-   ll e[2];
+   i_1024 a[2];
+   i_1024 m[2];
+   i_1024 e[2];
 
    m[0] = key.p;
    m[1] = key.q;
@@ -222,17 +223,17 @@ ll decryptRSA(ll N, PrivateKey key) {
 
 }
 
-ll TCR(ll *a, ll *m, int size) {
+i_1024 TCR(i_1024 *a, i_1024 *m, int size) {
 
    int i;
-   ll m_total = 1;
-   ll result = 0;
+   i_1024 m_total = 1;
+   i_1024 result = 0;
 
-   ll M[size];
-   ll x[size];
-   ll y[size];
-   ll Y[size];
-   ll r[size];
+   i_1024 M[size];
+   i_1024 x[size];
+   i_1024 y[size];
+   i_1024 Y[size];
+   i_1024 r[size];
 
    for(i = 0; i < size; i++)
       m_total *= m[i];

@@ -4,9 +4,9 @@
 #include <bitset> 
 #include <stack> 
 
-typedef long long ll;
-
 #define MAX_PRIMES 10000
+
+typedef long long ll;
 
 ll PRIMES[MAX_PRIMES];
 ll PRIMES_QTD;
@@ -17,47 +17,86 @@ void sieveOfEratosthenes();
 ll totienteDeEuler(ll p, ll q);
 ll inverso(ll a, ll n);
 ll modularExponential(ll b, ll e, ll m);
-ll encryptRSA(ll message, ll e, ll n);
+ll TCR(ll *a, ll *m, int size);
+
+struct PrivateKey {
+   ll p;
+   ll q;
+   ll d;
+   
+   void print(char *name) {
+      printf("Private key of %s: (%lld, %lld, %lld)\n", name, p, q, d);
+   }
+};
+
+struct PublicKey {
+   ll n;
+   ll e;
+
+   void print(char *name) {
+      printf("Public key of %s: (%lld, %lld)\n", name, n, e);
+   }
+};
+
+struct Keys {
+   PrivateKey priv;
+   PublicKey pub;
+
+   Keys() {
+         
+      priv.p = randomPrime();
+      priv.q = randomPrime();
+      pub.n = priv.p * priv.q;
+      
+      ll fi = totienteDeEuler(priv.p, priv.q);
+
+      do {
+         pub.e = rand() % fi;
+         priv.d = inverso(pub.e, fi);
+
+      } while(priv.d == -1);
+   }
+
+   ~Keys() {}
+
+   
+   void print(char *name) {
+      priv.print(name);
+      pub.print(name);
+   }
+};
+
+ll encryptRSA(ll message, PublicKey key);
+ll decryptRSA(ll N, PrivateKey key);
 
 int main(void) {
 
    sieveOfEratosthenes();
    srand(time(NULL));
 
-   ll p = randomPrime();
-   ll q = randomPrime();
-   ll n = p * q;
-   ll fi = totienteDeEuler(p, q);
-   ll e, d;
+   Keys Ana;
+   Keys Beto;
    ll M;
 
-   do {
-      e = rand() % fi;
-      d = inverso(e, fi);
-
-   } while(d == -1);
-
-   printf(
-      "p: %lld\n"\
-      "q: %lld\n"\
-      "n: %lld\n"\
-      "fi: %lld\n"\
-      "e: %lld\n"\
-      "d: %lld\n",
-      p,
-      q,
-      n,
-      fi,
-      e,
-      d
-   );
+   Ana.print( (char *) "Ana");
+   printf("\n");
+   Beto.print( (char *) "Beto");
 
    printf("Digite a mensagem desejada: ");
    scanf("%lld", &M);
 
-   ll N = encryptRSA(M, e, n);
-   
-   printf("Sua mensagem encriptada é: %lld\n", N);
+   M = encryptRSA(M, Beto.pub);
+   printf("Ana manda para Beto a mensagem criptografada %lld\n", M);
+
+   M = encryptRSA(M, Ana.pub);
+   printf("Beto manda de volta para Ana a mensagem duplamente criptografada %lld\n", M);
+
+   M = decryptRSA(M, Ana.priv);
+   printf("Ana descriptografa a mensagem e envia de volta para Beto %lld\n", M);
+
+   M = decryptRSA(M, Beto.priv);
+   printf("Por fim, Beto descriptografa a mensagem %lld\n", M);
+
 
    return 0;
 }
@@ -81,9 +120,9 @@ ll modularExponential(ll b, ll e, ll m) {
 
 }
 
-ll encryptRSA(ll message, ll e, ll n) {
+ll encryptRSA(ll message, PublicKey key) {
 
-   return modularExponential(message, e, n);
+   return modularExponential(message, key.e, key.n);
 
 }
 
@@ -163,4 +202,51 @@ ll randomPrime() {
 
    return PRIMES[random_index];
 
+}
+
+ll decryptRSA(ll N, PrivateKey key) {
+
+   ll a[2];
+   ll m[2];
+   ll e[2];
+
+   m[0] = key.p;
+   m[1] = key.q;
+
+   for(int i = 0; i < 2; i++) {
+      e[i] = key.d % (m[i] - 1);
+      a[i] = modularExponential(N, e[i], m[i]);
+   }
+
+   return TCR(a, m, 2);
+
+}
+
+ll TCR(ll *a, ll *m, int size) {
+
+   int i;
+   ll m_total = 1;
+   ll result = 0;
+
+   ll M[size];
+   ll x[size];
+   ll y[size];
+   ll Y[size];
+   ll r[size];
+
+   for(i = 0; i < size; i++)
+      m_total *= m[i];
+
+   for(i = 0; i < size; i++) {
+      M[i] = m_total / m[i];
+      x[i] = M[i] % m[i];
+      y[i] = inverso(x[i], m[i]);
+      Y[i] = a[i] * M[i] * y[i];
+      r[i] = Y[i] % m_total;
+   }
+
+   for(i = 0; i < size; i++)
+      result = (result + r[i]) % m_total;
+
+   return result;
 }
